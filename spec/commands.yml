@@ -1,0 +1,66 @@
+command_mixins:
+    qdrant:
+        class: QdrantCommandMixin
+        parameters:
+            collection_name:
+                parser: variable
+                type: str
+                optional: true
+                help: "Qdrant Collection name"
+                value_label: NAME
+                tags: [qdrant]
+            snapshot_name:
+                parser: variable
+                type: str
+                optional: true
+                help: "Qdrant Collection snapshot name"
+                value_label: NAME
+                tags: [qdrant]
+
+command_base:
+    qdrant_admin:
+        server_enabled: true
+        groups_allowed: [qdrant-admin]
+
+command:
+    qdrant:
+        list:
+            base: qdrant_admin
+            mixins: [qdrant]
+            parse: collection_name
+
+        snapshot:
+            base: qdrant_admin
+            mixins: [qdrant]
+            parse: collection_name
+
+        remove:
+            base: qdrant_admin
+            mixins: [qdrant]
+            confirm: true
+            parse:
+                collection_name: false
+                snapshot_name: false
+
+        clean:
+            base: qdrant_admin
+            mixins: [qdrant]
+            parameters:
+                keep_num:
+                    parser: variable
+                    type: int
+                    optional: "--keep"
+                    default: 3
+                    help: "Number of most recent snapshots to keep"
+                    value_label: INT
+                    tags: [qdrant]
+            parse:
+                - collection_name
+                - keep_num
+
+        restore:
+            base: qdrant_admin
+            mixins: [qdrant]
+            parse:
+                - collection_name
+                - snapshot_name

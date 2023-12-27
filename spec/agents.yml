@@ -1,0 +1,5 @@
+command:
+    agent:
+        qdrant:
+            base: agent
+            mixins: [qdrant]
