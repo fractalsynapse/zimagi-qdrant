@@ -21,6 +21,7 @@ command_base:
     qdrant_admin:
         server_enabled: true
         groups_allowed: [qdrant-admin]
+        worker_type: qdrant
 
 command:
     qdrant:

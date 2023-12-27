@@ -3,3 +3,4 @@ command:
         qdrant:
             base: agent
             mixins: [qdrant]
+            worker_type: qdrant
