@@ -19,12 +19,12 @@ class QdrantCommandMixin(CommandMixin('qdrant')):
         ]
 
 
-    def get_embeddings(self, collection, *ids):
+    def get_embeddings(self, collection, **filters):
         qdrant = self.qdrant(collection)
         sentences = []
         embeddings = []
 
-        for result in qdrant.get(*ids, fields = 'sentence', include_vectors = True):
+        for result in qdrant.get(fields = 'sentence', include_vectors = True, **filters):
             sentences.append(result.payload['sentence'])
             embeddings.append(result.vector)
 
