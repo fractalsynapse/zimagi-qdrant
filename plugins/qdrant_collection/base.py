@@ -19,9 +19,6 @@ class BaseProvider(BasePlugin('qdrant_collection')):
 
         self.identifier = self._get_identifier()
 
-        self.sentence_parser = self.command.get_sentence_parser(init = False)
-        self.encoder = self.command.get_encoder(init = False)
-
         with self.lock:
             self.initialize(self)
 
@@ -67,7 +64,7 @@ class BaseProvider(BasePlugin('qdrant_collection')):
             collection_name = self.name,
             shard_number = self.field_shards,
             vectors_config = models.VectorParams(
-                size = self.encoder.get_dimension(),
+                size = self.field_dimension,
                 distance = models.Distance.COSINE
             )
         )

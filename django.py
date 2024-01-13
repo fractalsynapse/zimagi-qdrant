@@ -36,3 +36,8 @@ try:
 
 except Exception:
   pass
+
+#
+# QDRANT Configurations
+#
+QDRANT_DEFAULT_VECTOR_DIMENSION = Config.integer('ZIMAGI_QDRANT_DEFAULT_VECTOR_DIMENSION', 768)
