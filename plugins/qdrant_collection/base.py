@@ -167,7 +167,7 @@ class BaseProvider(BasePlugin('qdrant_collection')):
     def store(self, *fields, partition = None):
         raise NotImplementedError("Method store must be implemented in subclasses")
 
-    def remove(self, *ids):
+    def remove(self, **filters):
         raise NotImplementedError("Method remove must be implemented in subclasses")
 
     def remove_by_id(self, id):
