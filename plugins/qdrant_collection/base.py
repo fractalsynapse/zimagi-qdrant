@@ -1,10 +1,12 @@
 from django.conf import settings
 from qdrant_client import QdrantClient, models
+from qdrant_client.http.exceptions import ResponseHandlingException
 
 from systems.plugins.index import BasePlugin
 from utility.data import Collection, get_identifier, get_uuid, ensure_list, chunk_list
 
 import billiard as multiprocessing
+import time
 import warnings
 
 
@@ -59,8 +61,37 @@ class BaseProvider(BasePlugin('qdrant_collection')):
         return self._client[self.identifier]
 
 
+    def request(self, method, *args, **kwargs):
+        wait = 1
+        while True:
+            try:
+                return getattr(self.client, method)(*args, **kwargs)
+            except ResponseHandlingException as e:
+                self.command.warning("Request for Qdrant {} failed with: {}".format(method, e))
+                time.sleep(wait)
+                wait = min(wait * 2, 300)
+
+    def request_collection(self, name):
+        return self.request('get_collection', name)
+
+    def request_upsert(self, **kwargs):
+        return self.request('upsert', **kwargs)
+
+    def request_delete(self, **kwargs):
+        return self.request('delete', **kwargs)
+
+    def request_scroll(self, **kwargs):
+        return self.request('scroll', **kwargs)
+
+    def request_count(self, **kwargs):
+        return self.request('count', **kwargs)
+
+    def request_search(self, **kwargs):
+        return self.request('search_batch', **kwargs)
+
+
     def _create_collection(self):
-        self.client.recreate_collection(
+        self.request('recreate_collection',
             collection_name = self.name,
             shard_number = self.field_shards,
             vectors_config = models.VectorParams(
@@ -77,7 +108,7 @@ class BaseProvider(BasePlugin('qdrant_collection')):
 
     def _create_collection_indexes(self):
         for field_name, schema_type in self._get_index_fields().items():
-            self.client.create_payload_index(
+            self.request('create_payload_index',
                 collection_name = self.name,
                 field_name = field_name,
                 field_schema = schema_type
@@ -85,7 +116,7 @@ class BaseProvider(BasePlugin('qdrant_collection')):
 
 
     def _check_exists(self, filters):
-        (result, offset) = self.client.scroll(
+        (result, offset) = self.request_scroll(
             collection_name = self.name,
             with_payload = [ 'id' ],
             with_vectors = False,
@@ -102,7 +133,7 @@ class BaseProvider(BasePlugin('qdrant_collection')):
         results = []
 
         while True:
-            (page_result, offset) = self.client.scroll(
+            (page_result, offset) = self.request_scroll(
                 collection_name = self.name,
                 with_payload = ensure_list(fields) if fields else None,
                 with_vectors = include_vectors,
@@ -146,7 +177,7 @@ class BaseProvider(BasePlugin('qdrant_collection')):
 
 
     def _get_count_query(self, filters):
-        count_data = self.client.count(
+        count_data = self.request_count(
             collection_name = self.name,
             count_filter = filters,
             exact = True
@@ -171,7 +202,7 @@ class BaseProvider(BasePlugin('qdrant_collection')):
         raise NotImplementedError("Method remove must be implemented in subclasses")
 
     def remove_by_id(self, id):
-        return self.client.delete(
+        return self.request_delete(
             collection_name = self.name,
             points_selector = models.PointIdsList(
                 points = [ id ],
@@ -200,7 +231,7 @@ class BaseProvider(BasePlugin('qdrant_collection')):
                     limit = limit
                 ))
 
-            search_results.extend(self.client.search_batch(
+            search_results.extend(self.request_search(
                 collection_name = self.name,
                 requests = search_queries
             ))
@@ -208,7 +239,7 @@ class BaseProvider(BasePlugin('qdrant_collection')):
 
 
     def get_info(self):
-        collection = self.client.get_collection(self.name)
+        collection = self.request_collection(self.name)
 
         def get_field_info(field):
             return {
@@ -231,13 +262,13 @@ class BaseProvider(BasePlugin('qdrant_collection')):
 
 
     def list_snapshots(self):
-        return self.client.list_snapshots(self.name)
+        return self.request('list_snapshots', self.name)
 
     def create_snapshot(self):
-        return self.client.create_snapshot(self.name, wait = True)
+        return self.request('create_snapshot', self.name, wait = True)
 
     def delete_snapshot(self, name):
-        return self.client.delete_snapshot(self.name, name, wait = True)
+        return self.request('delete_snapshot', self.name, name, wait = True)
 
     def clean_snapshots(self, keep_num = 3):
         keep_num = int(keep_num)
@@ -258,7 +289,7 @@ class BaseProvider(BasePlugin('qdrant_collection')):
                 return False
             name = snapshots[0].name
 
-        return self.client.recover_snapshot(self.name,
+        return self.request('recover_snapshot', self.name,
             "file:///qdrant/snapshots/{}/{}".format(self.name, name),
             priority = priority,
             wait = True
