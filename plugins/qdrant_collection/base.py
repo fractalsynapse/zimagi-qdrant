@@ -228,7 +228,8 @@ class BaseProvider(BasePlugin('qdrant_collection')):
                     filter = filters,
                     with_payload = ensure_list(fields) if fields else None,
                     with_vector = include_vectors,
-                    limit = limit
+                    limit = limit,
+                    score_threshold = 0
                 ))
 
             search_results.extend(self.request_search(
