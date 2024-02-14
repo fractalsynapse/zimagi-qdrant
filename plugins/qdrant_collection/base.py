@@ -263,7 +263,11 @@ class BaseProvider(BasePlugin('qdrant_collection')):
 
 
     def list_snapshots(self):
-        return self.request('list_snapshots', self.name)
+        return sorted(
+            self.request('list_snapshots', self.name),
+            key = lambda snapshot: snapshot.creation_time,
+            reverse = True
+        )
 
     def create_snapshot(self):
         return self.request('create_snapshot', self.name, wait = True)
