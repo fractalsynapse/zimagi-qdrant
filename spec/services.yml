@@ -10,10 +10,11 @@ services:
         restart_policy:
             Name: always
         environment:
-            QDRANT__LOG_LEVEL: INFO
+            QDRANT__LOG_LEVEL: DEBUG
             QDRANT__SERVICE__API_KEY: "@ZIMAGI_QDRANT_ACCESS_KEY"
             QDRANT__STORAGE__SNAPSHOTS_PATH: /qdrant/snapshots
             QDRANT__STORAGE__TEMP_PATH: /qdrant/snapshots/tmp
+            QDRANT__SERVICE__MAX_REQUEST_SIZE_MB: 100
         volumes:
             qdrant:
                 bind: /qdrant/storage
