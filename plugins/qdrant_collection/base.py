@@ -1,6 +1,4 @@
 from django.conf import settings
-from qdrant_client import QdrantClient, models
-from qdrant_client.http.exceptions import ResponseHandlingException
 
 from systems.plugins.index import BasePlugin
 from utility.data import Collection, get_identifier, get_uuid, ensure_list, chunk_list
@@ -38,6 +36,7 @@ class BaseProvider(BasePlugin('qdrant_collection')):
 
             if instance.identifier not in cls._client:
                 def init_client():
+                    from qdrant_client import QdrantClient
                     cls._client[instance.identifier] = QdrantClient(
                         host = settings.QDRANT_HOST,
                         port = settings.QDRANT_PORT,
@@ -62,6 +61,8 @@ class BaseProvider(BasePlugin('qdrant_collection')):
 
 
     def request(self, method, *args, **kwargs):
+        from qdrant_client.http.exceptions import ResponseHandlingException
+
         wait = 1
         while True:
             try:
@@ -91,6 +92,7 @@ class BaseProvider(BasePlugin('qdrant_collection')):
 
 
     def _create_collection(self):
+        from qdrant_client import models
         self.request('recreate_collection',
             collection_name = self.name,
             shard_number = self.field_shards,
@@ -160,6 +162,7 @@ class BaseProvider(BasePlugin('qdrant_collection')):
 
 
     def _get_query_id_condition(self, name, ids):
+        from qdrant_client import models
         return models.FieldCondition(
             key = name,
             match = models.MatchAny(any = ensure_list(ids))
@@ -186,6 +189,7 @@ class BaseProvider(BasePlugin('qdrant_collection')):
 
 
     def _get_record(self, sentence, embedding, **fields):
+        from qdrant_client import models
         return models.PointStruct(
             id = get_uuid([ sentence, *list(fields.values()) ]),
             vector = embedding,
@@ -202,6 +206,7 @@ class BaseProvider(BasePlugin('qdrant_collection')):
         raise NotImplementedError("Method remove must be implemented in subclasses")
 
     def remove_by_id(self, id):
+        from qdrant_client import models
         return self.request_delete(
             collection_name = self.name,
             points_selector = models.PointIdsList(
@@ -211,6 +216,8 @@ class BaseProvider(BasePlugin('qdrant_collection')):
 
 
     def search(self, embeddings, limit = 10, fields = None, include_vectors = False, filter_field = None, filter_values = None, batch = 100):
+        from qdrant_client import models
+
         scoped_embeddings = chunk_list(embeddings, batch)
         search_results = []
         filters = None
