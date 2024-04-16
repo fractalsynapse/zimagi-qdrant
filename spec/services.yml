@@ -14,7 +14,7 @@ services:
             QDRANT__SERVICE__API_KEY: "@ZIMAGI_QDRANT_ACCESS_KEY"
             QDRANT__STORAGE__SNAPSHOTS_PATH: /qdrant/snapshots
             QDRANT__STORAGE__TEMP_PATH: /qdrant/snapshots/tmp
-            QDRANT__SERVICE__MAX_REQUEST_SIZE_MB: 100
+            QDRANT__SERVICE__MAX_REQUEST_SIZE_MB: 1000
         volumes:
             qdrant:
                 bind: /qdrant/storage
