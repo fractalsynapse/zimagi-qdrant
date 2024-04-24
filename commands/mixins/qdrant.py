@@ -33,7 +33,7 @@ class QdrantCommandMixin(CommandMixin('qdrant')):
             embeddings = embeddings
         )
 
-    def search_embeddings(self, collection, embeddings, fields = None, limit = 10, filter_field = None, filter_ids = None):
+    def search_embeddings(self, collection, embeddings, fields = None, limit = 10, min_score = 0, filter_field = None, filter_ids = None):
         if not embeddings:
             return []
 
@@ -46,6 +46,7 @@ class QdrantCommandMixin(CommandMixin('qdrant')):
 
         options = {
             'limit': limit,
+            'min_score': min_score,
             'fields': [
                 *fields,
                 'sentence'

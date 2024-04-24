@@ -215,7 +215,7 @@ class BaseProvider(BasePlugin('qdrant_collection')):
         )
 
 
-    def search(self, embeddings, limit = 10, fields = None, include_vectors = False, filter_field = None, filter_values = None, batch = 100):
+    def search(self, embeddings, limit = 10, fields = None, include_vectors = False, filter_field = None, filter_values = None, batch = 100, min_score = 0):
         from qdrant_client import models
 
         scoped_embeddings = chunk_list(embeddings, batch)
@@ -236,7 +236,7 @@ class BaseProvider(BasePlugin('qdrant_collection')):
                     with_payload = ensure_list(fields) if fields else None,
                     with_vector = include_vectors,
                     limit = limit,
-                    score_threshold = 0
+                    score_threshold = min_score
                 ))
 
             search_results.extend(self.request_search(
