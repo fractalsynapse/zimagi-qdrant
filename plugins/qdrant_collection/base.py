@@ -241,7 +241,8 @@ class BaseProvider(BasePlugin('qdrant_collection')):
 
             search_results.extend(self.request_search(
                 collection_name = self.name,
-                requests = search_queries
+                requests = search_queries,
+                timeout = 14400
             ))
         return search_results
 
